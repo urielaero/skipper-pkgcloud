@@ -1,14 +1,14 @@
 {
-  "name": "skipper-rackspace",
+  "name": "skipper-pkgcloud",
   "version": "0.0.0",
-  "description": "adapter rackspace",
+  "description": "adapter pkgcloud",
   "main": "index.js",
   "scripts": {
     "test": "node -e \"require('skipper-adapter-tests')({mocha: { timeout: 360000000 }, module: require('./'), provider:process.env.CLOUDPROVIDER, username: process.env.CLOUDUSERNAME, apiKey: process.env.CLOUDAPIKEY, region: process.env.CLOUDREGION, container:process.env.CLOUDCONTAINER});\""
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/urielaero/skipper-rackspace.git"
+    "url": "https://github.com/urielaero/skipper-pkgcloud.git"
   },
   "keywords": [
     "skipper",
@@ -18,7 +18,7 @@
   "author": "aero.uriel@gmail.com",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/urielaero/skipper-rackspace/issues"
+    "url": "https://github.com/urielaero/skipper-pkgcloud/issues"
   },
   "devDependencies": {
     "skipper-adapter-tests": "^1.5.3"
