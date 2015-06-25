@@ -1,5 +1,8 @@
 var pkgcloud = require('pkgcloud');
-var Writable = require('stream').Writable;
+var Stream = require('stream');
+var Writable = Stream.Writable;
+var Readable = Stream.Readable;
+var Transform = Stream.Transform;
 var path = require('path');
 var mime = require('mime');
 
@@ -24,15 +27,47 @@ module.exports = function RackspaceStore(options) {
     done(new Error('TODO'));
   };
 
+  adapter.simpleRenameStream = function(dir, name){
+    var rename_ = new Transform({objectMode: true});
+    rename_._transform = function(__file, enctype, next){
+      __file.fd = path.join(dir, name);
+      this.push(__file);
+      next();
+    };
+
+    return rename_;
+  };
+
+  adapter.uploadStream = function(opts, done){
+    var client = getClientStorage(options);
+    var fd = opts.dirSave || '/';
+    fd = path.join(fd, opts.name);
+    var file = {
+      container: options.container,
+      remote: fd,
+      contentType: mime.lookup(fd),
+    };
+
+    var writeStream = client.upload(file);
+
+    writeStream.on('error', function(err){
+      done(err);
+    });
+
+    writeStream.on('success', function(data){
+        done();
+    });
+
+    return writeStream;
+  }
+
   adapter.receive = pkgCloudReceiver;
 
   return adapter;
 
   function pkgCloudReceiver(opts){
 
-    var receiver__ = Writable({
-      objectMode: true
-    });
+    var receiver__ = Writable({ objectMode:true });
 
     var client = getClientStorage(options);
 
@@ -41,7 +76,6 @@ module.exports = function RackspaceStore(options) {
     });
 
     receiver__._write = function(__newFile, encoding, next){
-      options.tmpdir = options.tmpdir || path.resolve(process.cwd(), '.tmp/pkgcloud-temp');
 
       var file = {
         container: options.container,
@@ -49,7 +83,20 @@ module.exports = function RackspaceStore(options) {
         contentType: mime.lookup(__newFile.fd),
       };
 
-      writeStream = client.upload(file);
+      var wr = new Transform({ objectMode:true });
+      wr._transform = function(chunk, enc, nextcb){
+        this.push(chunk);
+        nextcb();
+      };
+
+      wr.on('finish',function(){
+        var basename = path.basename(__newFile.fd);
+        options.after(wr, basename, next);
+      });
+
+      wr.on('error', next);
+
+      var writeStream = client.upload(file);
 
       writeStream.on('error', function(err){
         receiver__.emit('error', err);
@@ -60,9 +107,13 @@ module.exports = function RackspaceStore(options) {
       });
 
       writeStream.on('success', function(data){
-        next();
+        if(!options.after){
+          next();
+        } //if after next in finish.
       });
 
+      if(options.after)
+        __newFile.pipe(wr)
       __newFile.pipe(writeStream);
 
     };
