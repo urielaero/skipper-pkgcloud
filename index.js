@@ -61,6 +61,19 @@ module.exports = function RackspaceStore(options) {
     return writeStream;
   }
 
+  adapter.getContainerLink = function(done){
+    findOrCreateContainer(options, function(err, cont){
+      if(err) return done(err);
+      if(cont.cdnUri) return done(null, cont.cdnUri);
+      //public access.
+      cont.enableCdn(function(err, container){
+        if(err) return done(err);
+        done(null, container.cdnUri);
+      });
+    } );
+
+  };
+
   adapter.receive = pkgCloudReceiver;
 
   return adapter;
@@ -125,18 +138,14 @@ module.exports = function RackspaceStore(options) {
 };
 
 function findOrCreateContainer(options, done){
-  done = done || function(){};
-
   var containerName = options.container || 'pkgcloud';
   var client = getClientStorage(options);
 
   client.getContainer(containerName, function(err,cont){
-    if(err && err.statusCode == 404){//lo creamos
-      containerExist = true;
+    if(err && err.statusCode == 404){//make container
       client.createContainer(containerName, done);
     }else{
-      containerExist = true;
-      done(null,cont);
+      done(null, cont);
     }
   });
 
