@@ -12,8 +12,9 @@ module.exports = function RackspaceStore(options) {
   var adapter = {};
 
   adapter.rm = function(fd, done){
-    //se elimina fd y continua.
-    done(new Error('TODO'));
+    options.container = options.container || 'pkgcloud';
+    var client = getClientStorage(options);
+    client.removeFile(options.container, fd , done);
   };
 
   adapter.ls = function(dirpath, done){
