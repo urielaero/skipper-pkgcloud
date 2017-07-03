@@ -64,8 +64,14 @@ module.exports = function RackspaceStore(options) {
 
   adapter.getContainerLink = function(done){
     findOrCreateContainer(options, function(err, cont){
+
+      var cdnUri = cont.cdnUri;
+      if(options.useHttps){
+       cdnUri = cont.cdnSslUri; 
+      }
+
       if(err) return done(err);
-      if(cont.cdnUri) return done(null, cont.cdnUri);
+      if(cdnUri) return done(null, cdnUri);
       //public access.
       cont.enableCdn(function(err, container){
         if(err) return done(err);
