@@ -1,6 +1,6 @@
 {
   "name": "skipper-pkgcloud",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "adapter pkgcloud",
   "main": "index.js",
   "scripts": {
